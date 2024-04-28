@@ -9,33 +9,24 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import Slider from "@mui/material/Slider";
 import Image from "next/image";
+import AudioMotionAnalyzer from "audiomotion-analyzer";
 
 import tempCover from "@/images/tmp-cover.jpg";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const fftSize = 128;
-const barWidth = 10;
-const canvasWidth = (fftSize / 2) * barWidth;
-const canvasHeight = 50;
 
 export default function HeaderPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [gain, setGain] = useState(100.0);
 
   const isInitialized = useRef(false);
-  const canvasElementRef = useRef<HTMLCanvasElement>(null);
+  const visializerContainerRef = useRef<HTMLDivElement>();
   const audioElementRef = useRef<HTMLAudioElement>(null);
-  const canvasContext = useRef<CanvasRenderingContext2D | null>();
   const audioContext = useRef<AudioContext>();
   const sourceNode = useRef<MediaElementAudioSourceNode>();
   const gainNode = useRef<GainNode>();
-  const analyzerNode = useRef<AnalyserNode>();
-  const rafRef = useRef<number>();
 
   useEffect(() => {
     if (!isInitialized.current && audioElementRef.current) {
-      canvasContext.current = canvasElementRef.current?.getContext("2d");
-
       audioContext.current = new AudioContext();
 
       sourceNode.current = new MediaElementAudioSourceNode(
@@ -45,60 +36,73 @@ export default function HeaderPlayer() {
         }
       );
 
-      analyzerNode.current = audioContext.current.createAnalyser();
-      analyzerNode.current.fftSize = fftSize;
-      analyzerNode.current.minDecibels = -90;
-      analyzerNode.current.maxDecibels = -10;
-
       gainNode.current = new GainNode(audioContext.current);
 
-      sourceNode.current
-        .connect(gainNode.current)
-        .connect(analyzerNode.current)
-        .connect(audioContext.current.destination);
+      const analyzer = new AudioMotionAnalyzer(visializerContainerRef.current, {
+        connectSpeakers: false,
+        source: sourceNode.current,
+        alphaBars: false,
+        ansiBands: false,
+        barSpace: 0.25,
+        bgAlpha: 0,
+        channelLayout: "single",
+        colorMode: "gradient",
+        fftSize: 16384,
+        fillAlpha: 1,
+        frequencyScale: "log",
+        gradient: "prism",
+        ledBars: false,
+        linearAmplitude: false,
+        linearBoost: 1,
+        lineWidth: 0,
+        loRes: false,
+        lumiBars: false,
+        maxDecibels: -25,
+        maxFPS: 0,
+        maxFreq: 22000,
+        minDecibels: -85,
+        minFreq: 20,
+        mirror: 0,
+        mode: 8,
+        noteLabels: false,
+        outlineBars: false,
+        overlay: true,
+        peakLine: false,
+        radial: false,
+        radialInvert: false,
+        radius: 0.3,
+        reflexAlpha: 0.15,
+        reflexBright: 1,
+        reflexFit: true,
+        reflexRatio: 0,
+        roundBars: false,
+        showBgColor: true,
+        showFPS: false,
+        showPeaks: false,
+        showScaleX: false,
+        showScaleY: false,
+        smoothing: 0.5,
+        spinSpeed: 0,
+        splitGradient: false,
+        trueLeds: false,
+        useCanvas: true,
+        volume: 1,
+        weightingFilter: "D",
+      });
+
+      analyzer.connectOutput(gainNode.current);
+      gainNode.current.connect(audioContext.current.destination);
 
       isInitialized.current = true;
     }
-  }, []);
-
-  useEffect(() => {
-    function clear() {
-      if (canvasContext.current) {
-        canvasContext.current.clearRect(0, 0, canvasWidth, canvasHeight);
-      }
-    }
-
-    function visualize() {
-      rafRef.current = requestAnimationFrame(visualize);
-
-      if (analyzerNode.current && canvasContext.current) {
-        const bufferSize = analyzerNode.current.frequencyBinCount;
-        const buffer = new Uint8Array(bufferSize);
-
-        analyzerNode.current.getByteFrequencyData(buffer);
-
-        clear();
-
-        canvasContext.current.fillStyle = "#ffffff";
-
-        buffer.forEach((value, index) => {
-          canvasContext.current?.fillRect(
-            index * barWidth,
-            0,
-            barWidth,
-            (value / 255) * canvasHeight
-          );
-        });
-      }
-    }
-
-    if (isPlaying) {
-      visualize();
-    } else if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      clear();
-    }
-  }, [isPlaying, analyzerNode, canvasContext, rafRef]);
+  }, [
+    isInitialized,
+    audioElementRef,
+    visializerContainerRef,
+    audioContext,
+    sourceNode,
+    gainNode,
+  ]);
 
   const onPlayClick = useCallback(() => {
     if (isPlaying) {
@@ -112,7 +116,7 @@ export default function HeaderPlayer() {
       setIsPlaying(true);
       audioElementRef.current?.play();
     }
-  }, [isPlaying, analyzerNode, setIsPlaying]);
+  }, [isPlaying, setIsPlaying]);
 
   const onGainChange = useCallback(
     (_: Event, value: number | number[]) => {
@@ -161,7 +165,14 @@ export default function HeaderPlayer() {
             </Stack>
           </Box>
 
-          <Box flexShrink={0}>
+          <Stack
+            direction="row"
+            flexShrink={1}
+            flexGrow={1}
+            spacing={1}
+            alignItems="center"
+            useFlexGap
+          >
             <IconButton size="large" onClick={onPlayClick}>
               {isPlaying ? (
                 <PauseIcon fontSize="large" />
@@ -169,15 +180,8 @@ export default function HeaderPlayer() {
                 <PlayArrowIcon fontSize="large" />
               )}
             </IconButton>
-          </Box>
-
-          <Box flexGrow={1}>
-            <canvas
-              width={canvasWidth}
-              height={canvasHeight}
-              ref={canvasElementRef}
-            />
-          </Box>
+            <Box ref={visializerContainerRef} width={200} height={20}></Box>
+          </Stack>
 
           <Box flexShrink={0}>
             <Stack direction="row" spacing={2} width={150} alignItems="center">
