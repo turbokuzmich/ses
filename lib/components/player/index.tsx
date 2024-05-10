@@ -78,7 +78,7 @@ export default function HeaderPlayer() {
         roundBars: false,
         showBgColor: true,
         showFPS: false,
-        showPeaks: false,
+        showPeaks: true,
         showScaleX: false,
         showScaleY: false,
         smoothing: 0.5,
