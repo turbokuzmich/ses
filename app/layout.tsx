@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import CssBaseline from "@mui/material/CssBaseline";
-import HeaderPlayer from "@/lib/components/player";
+import HeaderPlayer from "@/app/_components/player";
 import Stack from "@mui/material/Stack";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import { SessionProvider } from "next-auth/react";
@@ -30,7 +30,7 @@ export default async function RootLayout({
             <CssBaseline />
             <Store>
               <SessionProvider session={session}>
-                <Stack direction="column" gap={2} useFlexGap>
+                <Stack direction="column" gap={4} useFlexGap>
                   <HeaderPlayer />
                   {children}
                 </Stack>

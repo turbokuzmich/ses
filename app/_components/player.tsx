@@ -1,6 +1,11 @@
 "use client";
 
-import { Box, Container, IconButton, Stack, Typography } from "@mui/material";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
@@ -9,10 +14,10 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import Slider from "@mui/material/Slider";
 import Image from "next/image";
+import UserAvatar from "./avatar";
 import AudioMotionAnalyzer from "audiomotion-analyzer";
 
 import tempCover from "@/images/tmp-cover.jpg";
-import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function HeaderPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -213,6 +218,8 @@ export default function HeaderPlayer() {
               </IconButton>
             </Stack>
           </Box>
+
+          <UserAvatar />
         </Stack>
       </Container>
     </Box>

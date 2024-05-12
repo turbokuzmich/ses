@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import SiginForm from "./signin-form";
 import SignupForm from "./signup-form";
 import Container from "@mui/material/Container";
+import Box from "@mui/material/Box";
 
 type ActiveForm = "signin" | "signup";
 
@@ -19,9 +20,11 @@ export default function Forms() {
   }, [setActiveForm]);
 
   return (
-    <Container maxWidth="xs">
-      {activeForm === "signin" ? <SiginForm onSignup={onSignup} /> : null}
-      {activeForm === "signup" ? <SignupForm onSignin={onSignin} /> : null}
-    </Container>
+    <Box paddingBlock={4}>
+      <Container maxWidth="xs">
+        {activeForm === "signin" ? <SiginForm onSignup={onSignup} /> : null}
+        {activeForm === "signup" ? <SignupForm onSignin={onSignin} /> : null}
+      </Container>
+    </Box>
   );
 }
