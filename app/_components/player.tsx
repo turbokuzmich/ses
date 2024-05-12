@@ -14,6 +14,9 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import Slider from "@mui/material/Slider";
 import Image from "next/image";
+import Logo from "@/lib/components/logo-cut";
+import A from "@mui/material/Link";
+import Link from "next/link";
 import UserAvatar from "./avatar";
 import AudioMotionAnalyzer from "audiomotion-analyzer";
 
@@ -138,10 +141,15 @@ export default function HeaderPlayer() {
 
   const onMuteClick = useCallback(() => {
     if (gainNode.current) {
-      gainNode.current.gain.value = 0;
-      setGain(0);
+      if (gain > 0) {
+        gainNode.current.gain.value = 0;
+        setGain(0);
+      } else {
+        gainNode.current.gain.value = 1.0;
+        setGain(100);
+      }
     }
-  }, [setGain]);
+  }, [gain, setGain]);
 
   return (
     <Box bgcolor="background.paper">
@@ -158,7 +166,10 @@ export default function HeaderPlayer() {
           alignItems="center"
           useFlexGap
         >
-          <Box flexShrink={0}>
+          <A href="/" component={Link} sx={{ width: 37 }}>
+            <Logo />
+          </A>
+          {/* <Box flexShrink={0}>
             <Stack direction="row" spacing={2} alignItems="center" useFlexGap>
               <Image src={tempCover} width={50} height={50} alt="album cover" />
               <Box>
@@ -168,16 +179,9 @@ export default function HeaderPlayer() {
                 </Typography>
               </Box>
             </Stack>
-          </Box>
+          </Box> */}
 
-          <Stack
-            direction="row"
-            flexShrink={1}
-            flexGrow={1}
-            spacing={1}
-            alignItems="center"
-            useFlexGap
-          >
+          <Stack direction="row" flexShrink={0} spacing={1} useFlexGap>
             <IconButton size="large" onClick={onPlayClick}>
               {isPlaying ? (
                 <PauseIcon fontSize="large" />
@@ -185,10 +189,6 @@ export default function HeaderPlayer() {
                 <PlayArrowIcon fontSize="large" />
               )}
             </IconButton>
-            <Box ref={visializerContainerRef} width={200} height={20}></Box>
-          </Stack>
-
-          <Box flexShrink={0}>
             <Stack direction="row" spacing={2} width={150} alignItems="center">
               <IconButton size="large" onClick={onMuteClick}>
                 {gain === 0 ? (
@@ -206,9 +206,13 @@ export default function HeaderPlayer() {
                 }}
               />
             </Stack>
+          </Stack>
+
+          <Box flexGrow={1}>
+            <Box ref={visializerContainerRef} width={200} height={20}></Box>
           </Box>
 
-          <Box flexShrink={0}>
+          {/* <Box flexShrink={0}>
             <Stack direction="row" alignItems="center">
               <IconButton size="large">
                 <FavoriteIcon fontSize="small" />
@@ -217,7 +221,7 @@ export default function HeaderPlayer() {
                 <PlaylistPlayIcon fontSize="small" />
               </IconButton>
             </Stack>
-          </Box>
+          </Box> */}
 
           <UserAvatar />
         </Stack>
