@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+export const apiUserSchema = z.object({
+  id: z.coerce.string(),
+  name: z.string(),
+  email: z.string().email(),
+});
+
 export const signInSchema = z.object({
   login: z
     .string({ required_error: "Пожалуйста, укажите электронную почту" })
@@ -18,3 +24,7 @@ export const signUpSchema = signInSchema.and(
       .min(3, "Ник должен состоять минимум из 3 символов"),
   })
 );
+
+export const authorizedSchema = z.object({
+  token: z.string({ required_error: "Неавторизованный запрос" }),
+});

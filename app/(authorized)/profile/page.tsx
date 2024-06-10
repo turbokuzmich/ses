@@ -4,6 +4,7 @@ import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Unstable_Grid2";
 import Button from "@mui/material/Button";
+import PersonalForm from "./_components/personal-form";
 
 export default async function Profile() {
   const session = await auth();
@@ -32,9 +33,10 @@ export default async function Profile() {
               autoComplete="false"
               value={session.user.email}
             />
-            <Button type="submit" variant="contained" size="large" disabled>
+            <PersonalForm />
+            {/* <Button type="submit" variant="contained" size="large" disabled>
               Сохранить
-            </Button>
+            </Button> */}
           </Stack>
         </Grid>
       </Grid>

@@ -1,13 +1,13 @@
 import { z } from "zod";
 import cookie from "cookie";
 import type { User } from "next-auth";
-import { signInSchema, signUpSchema } from "../schemas";
-
-const ApiUserSchema = z.object({
-  id: z.coerce.string(),
-  name: z.string(),
-  email: z.string().email(),
-});
+import {
+  apiUserSchema,
+  signInSchema,
+  signUpSchema,
+  fetchMeSchema,
+  personalDataSchema,
+} from "../schemas";
 
 export async function signIn({
   login,
@@ -16,7 +16,7 @@ export async function signIn({
   const response = await fetch(
     `${process.env.API_HOST}:${process.env.API_PORT}/account/signin`,
     {
-      body: JSON.stringify({ Email: login, Pass: password }),
+      body: JSON.stringify({ login, password }),
       cache: "no-store",
       headers: {
         "content-type": "application/json",
@@ -40,7 +40,7 @@ export async function signIn({
     return null;
   }
 
-  const parsedUser = ApiUserSchema.safeParse(await response.json());
+  const parsedUser = apiUserSchema.safeParse(await response.json());
 
   if (!parsedUser.success) {
     return null;
@@ -59,7 +59,7 @@ export async function signUp({
   const response = await fetch(
     `${process.env.API_HOST}:${process.env.API_PORT}/account/signup`,
     {
-      body: JSON.stringify({ Email: login, Pass: password, Nick: nickname }),
+      body: JSON.stringify({ login, password, nickname }),
       cache: "no-store",
       headers: {
         "content-type": "application/json",
@@ -83,7 +83,7 @@ export async function signUp({
     return null;
   }
 
-  const parsedUser = ApiUserSchema.safeParse(await response.json());
+  const parsedUser = apiUserSchema.safeParse(await response.json());
 
   if (!parsedUser.success) {
     return null;
@@ -92,4 +92,29 @@ export async function signUp({
   const user: User = { ...parsedUser.data, token };
 
   return user;
+}
+
+export async function fetchMe({ token }: z.infer<typeof fetchMeSchema>) {
+  const response = await fetch(
+    `${process.env.API_HOST}:${process.env.API_PORT}/account/personal`,
+    {
+      cache: "no-store",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  const parsedMe = personalDataSchema.safeParse(await response.json());
+
+  if (!parsedMe.success) {
+    return null;
+  }
+
+  return parsedMe.data;
 }

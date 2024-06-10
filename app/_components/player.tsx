@@ -5,22 +5,22 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+// import Typography from "@mui/material/Typography";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import PauseIcon from "@mui/icons-material/Pause";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
+// import FavoriteIcon from "@mui/icons-material/Favorite";
+// import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import Slider from "@mui/material/Slider";
-import Image from "next/image";
+// import Image from "next/image";
 import Logo from "@/lib/components/logo-cut";
 import A from "@mui/material/Link";
 import Link from "next/link";
 import UserAvatar from "./avatar";
 import AudioMotionAnalyzer from "audiomotion-analyzer";
 
-import tempCover from "@/images/tmp-cover.jpg";
+// import tempCover from "@/images/tmp-cover.jpg";
 
 export default function HeaderPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);

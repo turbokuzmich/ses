@@ -1,7 +1,5 @@
 require("@dotenvx/dotenvx").config();
 
-const fs = require("fs");
-const path = require("path");
 const jwa = require("jwa");
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -9,7 +7,8 @@ const cookieParser = require("cookie-parser");
 
 const hmac = jwa("HS256");
 const app = express();
-const usersPath = path.resolve("./db.json");
+
+const { User, PersonalData } = require("./db");
 
 function sign(data) {
   const base64 = Buffer.from(JSON.stringify(data)).toString("base64");
@@ -43,57 +42,90 @@ function extract(input) {
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-app.post("/account/signin", (req, res) => {
-  const { Email = "", Pass = "" } = req.body;
-  const users = JSON.parse(fs.readFileSync(usersPath, "utf8"));
-  const user = users.find(
-    (user) => user.email === Email && user.password === Pass
+app.post("/account/signin", async (req, res) => {
+  const { login: email, password } = req.body;
+
+  const encryptedPassword = hmac.sign(
+    `${password}.${process.env.SALT}`,
+    process.env.AUTH_SECRET
   );
 
+  const user = await User.findOne({
+    where: {
+      email,
+      password: encryptedPassword,
+    },
+  });
+
   if (user) {
-    res.cookie(process.env.SESSION_COOKIE_NAME, sign(user)).json(user);
+    res
+      .cookie(process.env.SESSION_COOKIE_NAME, sign({ email }))
+      .json({ id: user.id, name: user.name, email: user.email });
   } else {
     res.status(401).json({});
   }
 });
 
-app.post("/account/signup", (req, res) => {
-  const { Email = "", Pass = "", Nick = "" } = req.body;
-  const users = JSON.parse(fs.readFileSync(usersPath, "utf8"));
+app.post("/account/signup", async (req, res) => {
+  const { login: email, password, nickname: name } = req.body;
 
-  if (users.some((user) => user.email === Email)) {
+  const existingUserWithEmail = await User.findAll({
+    where: {
+      email,
+    },
+  });
+
+  if (existingUserWithEmail.length) {
     return res.status(400).json({});
   }
 
-  const user = {
-    id: Math.max(...users.map(({ id }) => id)) + 1,
-    name: Nick,
-    email: Email,
-    password: Pass,
-  };
+  const encryptedPassword = hmac.sign(
+    `${password}.${process.env.SALT}`,
+    process.env.AUTH_SECRET
+  );
 
-  users.push(user);
+  const newUser = await User.create({
+    name,
+    email,
+    password: encryptedPassword,
+  });
 
-  fs.writeFileSync(usersPath, JSON.stringify(users));
-
-  res.cookie(process.env.SESSION_COOKIE_NAME, sign(user)).json(user);
+  res
+    .cookie(process.env.SESSION_COOKIE_NAME, sign({ email }))
+    .json({ id: newUser.id, name: newUser.name, email: newUser.email });
 });
 
-app.get("/account/me", (req, res) => {
-  const user = extract(req.cookies[process.env.SESSION_COOKIE_NAME] ?? "");
+app.get("/account/personal", async (req, res) => {
+  const authorization = req.headers.authorization;
 
-  if (!user) {
+  if (!authorization) {
     return res.status(401).json({});
   }
 
-  const users = JSON.parse(fs.readFileSync(usersPath, "utf8"));
-  const updated = users.find((dbUser) => user.id === dbUser.id);
+  const token = authorization.replace(/^Bearer\s/, "");
+  const user = extract(token);
 
-  if (updated) {
-    res.cookie(process.env.SESSION_COOKIE_NAME, sign(updated)).json(updated);
-  } else {
+  if (!user || !user.email) {
     return res.status(401).json({});
   }
+
+  const personalData = await User.findOne({
+    where: {
+      email: user.email,
+    },
+    include: [PersonalData],
+  });
+
+  if (personalData && personalData.PersonalDatum) {
+    return res.json({
+      fio: personalData.PersonalDatum.fio,
+      birthdate: personalData.PersonalDatum.birthdate,
+      telegram: personalData.PersonalDatum.telegram,
+      vk: personalData.PersonalDatum.vk,
+    });
+  }
+
+  return res.json({});
 });
 
 app.listen(process.env.API_PORT);
