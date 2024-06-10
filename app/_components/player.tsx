@@ -155,6 +155,7 @@ export default function HeaderPlayer() {
     <Box bgcolor="background.paper">
       <Container>
         <audio
+          crossOrigin="anonymous"
           src="https://radio.skyses.space:8443/live"
           ref={audioElementRef}
         />
