@@ -128,4 +128,6 @@ app.get("/account/personal", async (req, res) => {
   return res.json({});
 });
 
-app.listen(process.env.API_PORT);
+app.listen(process.env.API_PORT, () => {
+  console.log("listening on port", process.env.API_PORT);
+});
