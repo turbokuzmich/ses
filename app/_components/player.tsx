@@ -155,8 +155,7 @@ export default function HeaderPlayer() {
     <Box bgcolor="background.paper">
       <Container>
         <audio
-          // src="https://radio.skyses.space:8443/live"
-          src="/sample.flac"
+          src="https://radio.skyses.space:8443/live"
           ref={audioElementRef}
         />
         <Stack
