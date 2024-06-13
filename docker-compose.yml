@@ -1,0 +1,28 @@
+version: '3'
+services:
+  ses-api:
+    container_name: ses-api
+    build:
+      context: ./ses/api
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    networks:
+      - bridge
+    restart: always
+
+  ses-web-client:
+    container_name: ses-web-client
+    build:
+      context: ./ses
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - bridge
+    restart: always
+    depends_on:
+      - ses-api
+
+networks:
+  bridge:
