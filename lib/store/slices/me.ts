@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { personalDataSchema } from "@/lib/schemas";
+import type { Me } from "@/lib/schemas";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const meApi = createApi({
@@ -9,7 +9,7 @@ export const meApi = createApi({
   tagTypes: ["Me"],
   reducerPath: "me",
   endpoints: (build) => ({
-    me: build.query<z.infer<typeof personalDataSchema>, undefined>({
+    me: build.query<Me, undefined>({
       query: () => ({
         url: "/me",
       }),

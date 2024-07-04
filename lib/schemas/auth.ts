@@ -4,6 +4,7 @@ export const apiUserSchema = z.object({
   id: z.coerce.string(),
   name: z.string(),
   email: z.string().email(),
+  token: z.string(),
 });
 
 export const signInSchema = z.object({

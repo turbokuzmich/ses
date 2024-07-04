@@ -6,7 +6,7 @@ import {
   signInSchema,
   signUpSchema,
   fetchMeSchema,
-  personalDataSchema,
+  meSchema,
 } from "../schemas";
 
 export async function signIn({
@@ -14,7 +14,7 @@ export async function signIn({
   password,
 }: z.infer<typeof signInSchema>): Promise<User | null> {
   const response = await fetch(
-    `${process.env.API_HOST}:${process.env.API_PORT}/account/signin`,
+    `${process.env.API_HOST}:${process.env.API_PORT}/auth/signin`,
     {
       body: JSON.stringify({ login, password }),
       cache: "no-store",
@@ -29,26 +29,13 @@ export async function signIn({
     return null;
   }
 
-  const token = response.headers
-    .getSetCookie()
-    .map((item) => cookie.parse(item))
-    .find((cookies) => cookies[process.env.SESSION_COOKIE_NAME!])?.[
-    process.env.SESSION_COOKIE_NAME!
-  ];
-
-  if (!token) {
-    return null;
-  }
-
   const parsedUser = apiUserSchema.safeParse(await response.json());
 
   if (!parsedUser.success) {
     return null;
   }
 
-  const user: User = { ...parsedUser.data, token };
-
-  return user;
+  return parsedUser.data as User;
 }
 
 export async function signUp({
@@ -57,7 +44,7 @@ export async function signUp({
   nickname,
 }: z.infer<typeof signUpSchema>) {
   const response = await fetch(
-    `${process.env.API_HOST}:${process.env.API_PORT}/account/signup`,
+    `${process.env.API_HOST}:${process.env.API_PORT}/auth/signup`,
     {
       body: JSON.stringify({ login, password, nickname }),
       cache: "no-store",
@@ -72,31 +59,18 @@ export async function signUp({
     return null;
   }
 
-  const token = response.headers
-    .getSetCookie()
-    .map((item) => cookie.parse(item))
-    .find((cookies) => cookies[process.env.SESSION_COOKIE_NAME!])?.[
-    process.env.SESSION_COOKIE_NAME!
-  ];
-
-  if (!token) {
-    return null;
-  }
-
   const parsedUser = apiUserSchema.safeParse(await response.json());
 
   if (!parsedUser.success) {
     return null;
   }
 
-  const user: User = { ...parsedUser.data, token };
-
-  return user;
+  return parsedUser.data as User;
 }
 
 export async function fetchMe({ token }: z.infer<typeof fetchMeSchema>) {
   const response = await fetch(
-    `${process.env.API_HOST}:${process.env.API_PORT}/account/personal`,
+    `${process.env.API_HOST}:${process.env.API_PORT}/users/me`,
     {
       cache: "no-store",
       headers: {
@@ -110,7 +84,7 @@ export async function fetchMe({ token }: z.infer<typeof fetchMeSchema>) {
     return null;
   }
 
-  const parsedMe = personalDataSchema.safeParse(await response.json());
+  const parsedMe = meSchema.safeParse(await response.json());
 
   if (!parsedMe.success) {
     return null;
