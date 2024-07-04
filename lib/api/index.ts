@@ -1,5 +1,4 @@
 import { z } from "zod";
-import cookie from "cookie";
 import type { User } from "next-auth";
 import {
   apiUserSchema,
@@ -9,21 +8,22 @@ import {
   meSchema,
 } from "../schemas";
 
+function getEnpointUrl(endpoint: string) {
+  return `${process.env.API_PROTOCOL}://${process.env.API_HOST}:${process.env.API_PORT}${endpoint}`;
+}
+
 export async function signIn({
   login,
   password,
 }: z.infer<typeof signInSchema>): Promise<User | null> {
-  const response = await fetch(
-    `${process.env.API_HOST}:${process.env.API_PORT}/auth/signin`,
-    {
-      body: JSON.stringify({ login, password }),
-      cache: "no-store",
-      headers: {
-        "content-type": "application/json",
-      },
-      method: "POST",
-    }
-  );
+  const response = await fetch(getEnpointUrl("/auth/signin"), {
+    body: JSON.stringify({ login, password }),
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+    },
+    method: "POST",
+  });
 
   if (response.status !== 200) {
     return null;
@@ -43,17 +43,14 @@ export async function signUp({
   password,
   nickname,
 }: z.infer<typeof signUpSchema>) {
-  const response = await fetch(
-    `${process.env.API_HOST}:${process.env.API_PORT}/auth/signup`,
-    {
-      body: JSON.stringify({ login, password, nickname }),
-      cache: "no-store",
-      headers: {
-        "content-type": "application/json",
-      },
-      method: "POST",
-    }
-  );
+  const response = await fetch(getEnpointUrl("/auth/signup"), {
+    body: JSON.stringify({ login, password, nickname }),
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+    },
+    method: "POST",
+  });
 
   if (response.status !== 200) {
     return null;
@@ -69,16 +66,13 @@ export async function signUp({
 }
 
 export async function fetchMe({ token }: z.infer<typeof fetchMeSchema>) {
-  const response = await fetch(
-    `${process.env.API_HOST}:${process.env.API_PORT}/users/me`,
-    {
-      cache: "no-store",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response = await fetch(getEnpointUrl("/users/me"), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+  });
 
   if (response.status !== 200) {
     return null;
