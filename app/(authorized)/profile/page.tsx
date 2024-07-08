@@ -1,9 +1,6 @@
 import { auth } from "@/lib/auth";
 import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Unstable_Grid2";
-import Button from "@mui/material/Button";
 import PersonalForm from "./_components/personal-form";
 
 export default async function Profile() {
@@ -18,26 +15,7 @@ export default async function Profile() {
       <Typography variant="h4">Личные данные</Typography>
       <Grid container>
         <Grid xs={12} md={6}>
-          <Stack spacing={2} useFlexGap>
-            <TextField
-              disabled
-              label="Ник"
-              size="small"
-              autoComplete="false"
-              value={session.user.name}
-            />
-            <TextField
-              disabled
-              label="Электронная почта"
-              size="small"
-              autoComplete="false"
-              value={session.user.email}
-            />
-            <PersonalForm />
-            {/* <Button type="submit" variant="contained" size="large" disabled>
-              Сохранить
-            </Button> */}
-          </Stack>
+          <PersonalForm />
         </Grid>
       </Grid>
     </>

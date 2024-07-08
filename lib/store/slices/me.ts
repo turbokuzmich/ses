@@ -1,5 +1,4 @@
-import { z } from "zod";
-import type { Me } from "@/lib/schemas";
+import type { Me, MeForm } from "@/lib/schemas";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const meApi = createApi({
@@ -9,12 +8,23 @@ export const meApi = createApi({
   tagTypes: ["Me"],
   reducerPath: "me",
   endpoints: (build) => ({
-    me: build.query<Me, undefined>({
-      query: () => ({
-        url: "/me",
-      }),
+    fetchMe: build.query<Me, void>({
+      query() {
+        return {
+          url: "/me",
+        };
+      },
+      providesTags: ["Me"],
+    }),
+    updateMe: build.mutation<Me, MeForm>({
+      query(data) {
+        return {
+          url: "/me",
+          method: "POST",
+          body: JSON.stringify(data),
+        };
+      },
+      invalidatesTags: ["Me"],
     }),
   }),
 });
-
-export const { useMeQuery } = meApi;

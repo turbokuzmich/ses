@@ -6,6 +6,7 @@ import {
   signUpSchema,
   fetchMeSchema,
   meSchema,
+  updateMeSchema,
 } from "../schemas";
 
 function getEnpointUrl(endpoint: string) {
@@ -72,6 +73,33 @@ export async function fetchMe({ token }: z.infer<typeof fetchMeSchema>) {
       "content-type": "application/json",
       authorization: `Bearer ${token}`,
     },
+  });
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  const parsedMe = meSchema.safeParse(await response.json());
+
+  if (!parsedMe.success) {
+    return null;
+  }
+
+  return parsedMe.data;
+}
+
+export async function updateMe({
+  token,
+  ...data
+}: z.infer<typeof updateMeSchema>) {
+  const response = await fetch(getEnpointUrl("/users/me"), {
+    cache: "no-store",
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
   });
 
   if (response.status !== 200) {
