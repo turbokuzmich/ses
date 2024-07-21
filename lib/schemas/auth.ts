@@ -26,6 +26,8 @@ export const signUpSchema = signInSchema.and(
   })
 );
 
-export const authorizedSchema = z.object({
-  token: z.string({ required_error: "Неавторизованный запрос" }),
-});
+export const authorizedSchema = z
+  .object({
+    token: z.string({ required_error: "Неавторизованный запрос" }),
+  })
+  .required();

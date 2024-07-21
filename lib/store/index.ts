@@ -2,14 +2,16 @@ import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { meApi } from "./slices/me";
+import { postsApi } from "./slices/posts";
 
 export const makeStore = () => {
   const store = configureStore({
     reducer: {
       [meApi.reducerPath]: meApi.reducer,
+      [postsApi.reducerPath]: postsApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(meApi.middleware),
+      getDefaultMiddleware().concat(meApi.middleware, postsApi.middleware),
   });
 
   setupListeners(store.dispatch);

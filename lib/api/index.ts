@@ -7,6 +7,8 @@ import {
   fetchMeSchema,
   meSchema,
   updateMeSchema,
+  CreatePost,
+  postSchema,
 } from "../schemas";
 
 function getEnpointUrl(endpoint: string) {
@@ -113,4 +115,28 @@ export async function updateMe({
   }
 
   return parsedMe.data;
+}
+
+export async function createPost({ token, ...data }: CreatePost) {
+  const response = await fetch(getEnpointUrl("/posts"), {
+    cache: "no-store",
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  const parsedPost = postSchema.safeParse(await response.json());
+
+  if (!parsedPost.success) {
+    return null;
+  }
+
+  return parsedPost.data;
 }

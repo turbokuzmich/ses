@@ -22,7 +22,7 @@ export default function PersonalForm() {
 }
 
 function Form({ me }: Readonly<{ me: Me | undefined }>) {
-  const { register, handleSubmit } = useForm<MeForm>({
+  const { formState, register, handleSubmit } = useForm<MeForm>({
     defaultValues: me,
     resolver: zodResolver(meFormSchema),
   });
@@ -73,7 +73,7 @@ function Form({ me }: Readonly<{ me: Me | undefined }>) {
           type="submit"
           variant="contained"
           size="large"
-          disabled={isLoading}
+          disabled={isLoading || formState.isSubmitting}
         >
           Сохранить
         </Button>

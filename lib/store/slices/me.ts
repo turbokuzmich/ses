@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const meApi = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: "/api",
+    baseUrl: "/api/me",
   }),
   tagTypes: ["Me"],
   reducerPath: "me",
@@ -11,7 +11,7 @@ export const meApi = createApi({
     fetchMe: build.query<Me, void>({
       query() {
         return {
-          url: "/me",
+          url: "/",
         };
       },
       providesTags: ["Me"],
@@ -19,7 +19,7 @@ export const meApi = createApi({
     updateMe: build.mutation<Me, MeForm>({
       query(data) {
         return {
-          url: "/me",
+          url: "/",
           method: "POST",
           body: JSON.stringify(data),
         };
