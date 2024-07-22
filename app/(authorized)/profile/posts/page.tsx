@@ -5,6 +5,9 @@ import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
+import CardContent from "@mui/material/CardContent";
 import { useForm } from "react-hook-form";
 import { createPostFormSchema, type CreatePostForm } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +19,11 @@ const defaultCreatePostValues: CreatePostForm = {
 };
 
 export default function Posts() {
+  const { data: posts } = postsApi.endpoints.fetchMyPosts.useQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
+
   const { formState, handleSubmit, register, reset } = useForm<CreatePostForm>({
     defaultValues: defaultCreatePostValues,
     resolver: zodResolver(createPostFormSchema),
@@ -57,6 +65,13 @@ export default function Posts() {
         </Stack>
       </form>
       <Divider />
+      <Stack gap={2} useFlexGap>
+        {(posts ?? []).map((post) => (
+          <Card key={post.id}>
+            <CardContent>{post.text}</CardContent>
+          </Card>
+        ))}
+      </Stack>
     </>
   );
 }

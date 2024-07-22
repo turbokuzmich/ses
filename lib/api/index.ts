@@ -7,8 +7,10 @@ import {
   fetchMeSchema,
   meSchema,
   updateMeSchema,
-  CreatePost,
+  type CreatePost,
+  type Post,
   postSchema,
+  authorizedSchema,
 } from "../schemas";
 
 function getEnpointUrl(endpoint: string) {
@@ -115,6 +117,23 @@ export async function updateMe({
   }
 
   return parsedMe.data;
+}
+
+export async function fetchMyPosts({
+  token,
+}: z.infer<typeof authorizedSchema>) {
+  const response = await fetch(getEnpointUrl("/posts/my"), {
+    cache: "no-store",
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  return (await response.json()) as Post[];
 }
 
 export async function createPost({ token, ...data }: CreatePost) {
