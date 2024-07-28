@@ -1,24 +1,36 @@
 "use client";
 
-import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
+import Avatar from "@mui/material/Avatar";
+import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import { useForm } from "react-hook-form";
 import { createPostFormSchema, type CreatePostForm } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { postsApi } from "@/lib/store/slices/posts";
+import { meApi } from "@/lib/store/slices/me";
+import stc from "string-to-color";
+import { DateTime } from "luxon";
 
 const defaultCreatePostValues: CreatePostForm = {
   text: "",
 };
 
 export default function Posts() {
+  const { currentData: me } = meApi.endpoints.fetchMe.useQuery();
+
+  const letter = useMemo(
+    () => (me ? me.name.charAt(0).toUpperCase() : null),
+    [me]
+  );
+
+  const color = useMemo(() => (me ? stc(me.name) : null), [me]);
+
   const { data: posts } = postsApi.endpoints.fetchMyPosts.useQuery(undefined, {
     refetchOnMountOrArgChange: true,
     refetchOnFocus: true,
@@ -65,12 +77,30 @@ export default function Posts() {
         </Stack>
       </form>
       <Divider />
+      {/* TODO вынести список постов в отдельный компонент */}
       <Stack gap={2} useFlexGap>
-        {(posts ?? []).map((post) => (
-          <Card key={post.id}>
-            <CardContent>{post.text}</CardContent>
-          </Card>
-        ))}
+        {(posts ?? []).map((post) => {
+          const createdAt = DateTime.fromISO(post.createdAt).setLocale("ru");
+
+          return (
+            <Card key={post.id}>
+              {me ? (
+                <CardHeader
+                  avatar={
+                    <Avatar alt={me.name} sx={{ bgcolor: color }}>
+                      {letter}
+                    </Avatar>
+                  }
+                  title={me.name}
+                  subheader={`${createdAt.toLocaleString(
+                    DateTime.DATE_MED
+                  )} ${createdAt.toLocaleString(DateTime.TIME_24_SIMPLE)}`}
+                />
+              ) : null}
+              <CardContent>{post.text}</CardContent>
+            </Card>
+          );
+        })}
       </Stack>
     </>
   );

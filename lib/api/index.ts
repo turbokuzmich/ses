@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { User } from "next-auth";
+import type { User as AuthorizedUser } from "next-auth";
 import {
   apiUserSchema,
   signInSchema,
@@ -11,6 +11,7 @@ import {
   type Post,
   postSchema,
   authorizedSchema,
+  userSchema,
 } from "../schemas";
 
 function getEnpointUrl(endpoint: string) {
@@ -20,7 +21,7 @@ function getEnpointUrl(endpoint: string) {
 export async function signIn({
   login,
   password,
-}: z.infer<typeof signInSchema>): Promise<User | null> {
+}: z.infer<typeof signInSchema>): Promise<AuthorizedUser | null> {
   const response = await fetch(getEnpointUrl("/auth/signin"), {
     body: JSON.stringify({ login, password }),
     cache: "no-store",
@@ -40,7 +41,7 @@ export async function signIn({
     return null;
   }
 
-  return parsedUser.data as User;
+  return parsedUser.data as AuthorizedUser;
 }
 
 export async function signUp({
@@ -67,7 +68,7 @@ export async function signUp({
     return null;
   }
 
-  return parsedUser.data as User;
+  return parsedUser.data as AuthorizedUser;
 }
 
 export async function fetchMe({ token }: z.infer<typeof fetchMeSchema>) {
@@ -125,6 +126,7 @@ export async function fetchMyPosts({
   const response = await fetch(getEnpointUrl("/posts/my"), {
     cache: "no-store",
     headers: {
+      "content-type": "application/json",
       authorization: `Bearer ${token}`,
     },
   });
@@ -158,4 +160,46 @@ export async function createPost({ token, ...data }: CreatePost) {
   }
 
   return parsedPost.data;
+}
+
+export async function getUser(id: number) {
+  const response = await fetch(getEnpointUrl(`/users/${id}`), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  const parsedUser = userSchema.safeParse(await response.json());
+
+  if (!parsedUser.success) {
+    return null;
+  }
+
+  return parsedUser.data;
+}
+
+export async function getPostsByUser(id: number) {
+  const response = await fetch(getEnpointUrl(`/posts/by-user/${id}`), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+
+  if (response.status !== 200) {
+    return [];
+  }
+
+  const parsedPosts = postSchema.array().safeParse(await response.json());
+
+  if (!parsedPosts.success) {
+    return [];
+  }
+
+  return parsedPosts.data;
 }

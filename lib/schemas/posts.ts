@@ -6,6 +6,7 @@ export const postSchema = z
     id: z.number().positive(),
     text: z.string(),
     userId: z.number().positive(),
+    createdAt: z.string().datetime(),
   })
   .required();
 export type Post = z.infer<typeof postSchema>;

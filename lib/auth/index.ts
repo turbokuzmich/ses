@@ -40,6 +40,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
+      session.user.id = token.sub ?? "0";
       session.user.token = token.token;
 
       return session;
