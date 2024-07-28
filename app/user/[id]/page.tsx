@@ -1,4 +1,4 @@
-import { getPostsByUser, getUser } from "@/lib/api";
+import { getPostsByUser, getUser, isSubscribed } from "@/lib/api";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Container from "@mui/material/Container";
@@ -11,6 +11,8 @@ import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import stc from "string-to-color";
 import { DateTime } from "luxon";
+import { type Session } from "next-auth";
+import Button from "@mui/material/Button";
 
 export default async function User({
   params: { id },
@@ -35,6 +37,8 @@ export default async function User({
     );
   }
 
+  const isSubscribed = await subscribed(session, userId);
+
   const letter = user.name.charAt(0).toUpperCase();
   const color = stc(user.name);
 
@@ -46,11 +50,20 @@ export default async function User({
             alt={user.name}
             sx={{
               bgcolor: color,
+              flexGrow: 0,
+              flexShrink: 0,
             }}
           >
             {letter}
           </Avatar>
-          <Typography variant="h6">{user.name}</Typography>
+          <Typography variant="h6" flexGrow={1} flexShrink={1}>
+            {user.name}
+          </Typography>
+          {session?.user ? (
+            <Button variant="contained">
+              {isSubscribed ? "Отписаться" : "Подписаться"}
+            </Button>
+          ) : null}
         </Stack>
         <Divider />
         <Stack gap={2} useFlexGap>
@@ -78,4 +91,12 @@ export default async function User({
       </Stack>
     </Container>
   );
+}
+
+async function subscribed(session: Session | null, id: number) {
+  if (session?.user) {
+    return isSubscribed(id, session.user.token);
+  }
+
+  return false;
 }

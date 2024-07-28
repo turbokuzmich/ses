@@ -12,6 +12,7 @@ import {
   postSchema,
   authorizedSchema,
   userSchema,
+  isSubscribedSchema,
 } from "../schemas";
 
 function getEnpointUrl(endpoint: string) {
@@ -202,4 +203,28 @@ export async function getPostsByUser(id: number) {
   }
 
   return parsedPosts.data;
+}
+
+export async function isSubscribed(id: number, token: string) {
+  const response = await fetch(getEnpointUrl(`/users/is-subscribed/${id}`), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status !== 200) {
+    return false;
+  }
+
+  const parsedSubscription = isSubscribedSchema.safeParse(
+    await response.json()
+  );
+
+  if (!parsedSubscription.success) {
+    return false;
+  }
+
+  return parsedSubscription.data.subscribed;
 }
