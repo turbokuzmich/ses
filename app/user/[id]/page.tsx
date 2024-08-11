@@ -13,6 +13,7 @@ import stc from "string-to-color";
 import { DateTime } from "luxon";
 import { type Session } from "next-auth";
 import Button from "@mui/material/Button";
+import { subscribe, unsubscribe } from "./actions";
 
 export default async function User({
   params: { id },
@@ -37,8 +38,6 @@ export default async function User({
     );
   }
 
-  const isSubscribed = await subscribed(session, userId);
-
   const letter = user.name.charAt(0).toUpperCase();
   const color = stc(user.name);
 
@@ -59,11 +58,7 @@ export default async function User({
           <Typography variant="h6" flexGrow={1} flexShrink={1}>
             {user.name}
           </Typography>
-          {session?.user ? (
-            <Button variant="contained">
-              {isSubscribed ? "Отписаться" : "Подписаться"}
-            </Button>
-          ) : null}
+          <SubscriptionButton id={userId} session={session} />
         </Stack>
         <Divider />
         <Stack gap={2} useFlexGap>
@@ -93,10 +88,22 @@ export default async function User({
   );
 }
 
-async function subscribed(session: Session | null, id: number) {
-  if (session?.user) {
-    return isSubscribed(id, session.user.token);
+async function SubscriptionButton({
+  id,
+  session,
+}: Readonly<{ id: number; session: Session | null }>) {
+  if (!session?.user) {
+    return null;
   }
 
-  return false;
+  const subscribed = await isSubscribed(id, session.user.token);
+
+  return (
+    <form action={subscribed ? unsubscribe : subscribe}>
+      <input type="hidden" name="id" value={id} />
+      <Button variant="contained" type="submit">
+        {subscribed ? "Отписаться" : "Подписаться"}
+      </Button>
+    </form>
+  );
 }

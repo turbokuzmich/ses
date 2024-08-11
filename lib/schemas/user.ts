@@ -20,3 +20,10 @@ export const isSubscribedSchema = z
   })
   .required();
 export type IsSubscribed = z.infer<typeof isSubscribedSchema>;
+
+export const subscriptionRequestSchema = z
+  .object({
+    id: z.coerce.number(),
+  })
+  .required();
+export type SubscriptionRequest = z.infer<typeof subscriptionRequestSchema>;

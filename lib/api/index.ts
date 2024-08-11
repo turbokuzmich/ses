@@ -100,7 +100,7 @@ export async function updateMe({
 }: z.infer<typeof updateMeSchema>) {
   const response = await fetch(getEnpointUrl("/users/me"), {
     cache: "no-store",
-    method: "POST",
+    method: "PUT",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${token}`,
@@ -142,7 +142,7 @@ export async function fetchMyPosts({
 export async function createPost({ token, ...data }: CreatePost) {
   const response = await fetch(getEnpointUrl("/posts"), {
     cache: "no-store",
-    method: "PUT",
+    method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${token}`,
@@ -227,4 +227,78 @@ export async function isSubscribed(id: number, token: string) {
   }
 
   return parsedSubscription.data.subscribed;
+}
+
+export async function subscribe(id: number, token: string) {
+  const response = await fetch(getEnpointUrl(`/users/subscribe/${id}`), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    method: "POST",
+  });
+
+  if (response.status !== 200) {
+    return false;
+  }
+
+  const parsedSubscription = isSubscribedSchema.safeParse(
+    await response.json()
+  );
+
+  if (!parsedSubscription.success) {
+    return false;
+  }
+
+  return parsedSubscription.data.subscribed;
+}
+
+export async function unsubscribe(id: number, token: string) {
+  const response = await fetch(getEnpointUrl(`/users/subscribe/${id}`), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    method: "DELETE",
+  });
+
+  if (response.status !== 200) {
+    return false;
+  }
+
+  const parsedSubscription = isSubscribedSchema.safeParse(
+    await response.json()
+  );
+
+  if (!parsedSubscription.success) {
+    return false;
+  }
+
+  return parsedSubscription.data.subscribed;
+}
+
+export async function fetchSubscriptions(token: string) {
+  const response = await fetch(getEnpointUrl("/users/subscriptions"), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status !== 200) {
+    return [];
+  }
+
+  const parsedSubscriptions = userSchema
+    .array()
+    .safeParse(await response.json());
+
+  if (!parsedSubscriptions.success) {
+    return [];
+  }
+
+  return parsedSubscriptions.data;
 }
