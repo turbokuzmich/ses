@@ -9,6 +9,8 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { MouseEvent, useCallback } from "react";
 import { doSignUp } from "../actions";
 import { signUpSchema } from "@/lib/schemas";
@@ -38,6 +40,7 @@ export default function SignupForm({
       password: "",
       repassword: "",
       nickname: "",
+      role: "user",
     },
   });
 
@@ -135,6 +138,23 @@ export default function SignupForm({
               );
             }}
           />
+          <Controller
+            name="role"
+            control={control}
+            render={({ field, formState }) => {
+              return (
+                <ToggleButtonGroup
+                  {...field}
+                  disabled={formState.isSubmitting}
+                  exclusive
+                >
+                  <ToggleButton value="user">Пользователь</ToggleButton>
+                  <ToggleButton value="promo">Промо</ToggleButton>
+                  <ToggleButton value="artist">Исполнитель</ToggleButton>
+                </ToggleButtonGroup>
+              );
+            }}
+          ></Controller>
           <Button
             type="submit"
             variant="contained"

@@ -18,6 +18,9 @@ export const signInSchema = z.object({
 
 export const signUpSchema = signInSchema.and(
   z.object({
+    role: z.enum(["user", "artist", "promo"], {
+      message: "Пожалуйста, выберите роль",
+    }),
     nickname: z
       .string({
         required_error: "Пожалуйста, укажите ник",

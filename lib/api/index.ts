@@ -49,9 +49,10 @@ export async function signUp({
   login,
   password,
   nickname,
+  role,
 }: z.infer<typeof signUpSchema>) {
   const response = await fetch(getEnpointUrl("/auth/signup"), {
-    body: JSON.stringify({ login, password, nickname }),
+    body: JSON.stringify({ login, password, nickname, role }),
     cache: "no-store",
     headers: {
       "content-type": "application/json",
