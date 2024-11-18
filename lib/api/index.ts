@@ -12,10 +12,12 @@ import {
   type Post,
   type Entity,
   type EntityRelation,
+  type CheckEntity,
   postSchema,
   authorizedSchema,
   userSchema,
   isSubscribedSchema,
+  checkEntitySchema,
 } from "../schemas";
 
 const defaultRequestInit: Partial<RequestInit> = {
@@ -296,7 +298,7 @@ export async function checkEntity(
   entity: Entity,
   relation: EntityRelation,
   token: string
-) {
+): Promise<CheckEntity> {
   const url = getEnpointUrl("/acl/check-entity");
   url.searchParams.set("entity", entity);
   url.searchParams.set("relation", relation);
@@ -304,16 +306,14 @@ export async function checkEntity(
   const response = await fetch(url, withToken(token));
 
   if (response.status !== 200) {
-    return [];
+    return { allowed: false };
   }
 
-  const parsedSubscriptions = userSchema
-    .array()
-    .safeParse(await response.json());
+  const parsedCheck = checkEntitySchema.safeParse(await response.json());
 
-  if (!parsedSubscriptions.success) {
-    return [];
+  if (!parsedCheck.success) {
+    return { allowed: false };
   }
 
-  return parsedSubscriptions.data;
+  return parsedCheck.data;
 }

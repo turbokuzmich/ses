@@ -9,4 +9,4 @@ export type EntityRelation = inferType<typeof entityRelationSchema>;
 export const checkEntitySchema = object({
   allowed: boolean(),
 }).required();
-export type CheckEntityType = inferType<typeof checkEntitySchema>;
+export type CheckEntity = inferType<typeof checkEntitySchema>;
