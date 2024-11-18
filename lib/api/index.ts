@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { merge } from "lodash";
 import type { User as AuthorizedUser } from "next-auth";
 import {
   apiUserSchema,
@@ -9,28 +10,50 @@ import {
   updateMeSchema,
   type CreatePost,
   type Post,
+  type Entity,
+  type EntityRelation,
   postSchema,
   authorizedSchema,
   userSchema,
   isSubscribedSchema,
 } from "../schemas";
 
+const defaultRequestInit: Partial<RequestInit> = {
+  cache: "no-store",
+  headers: {
+    "content-type": "application/json",
+  },
+};
+
 function getEnpointUrl(endpoint: string) {
-  return `${process.env.API_PROTOCOL}://${process.env.API_HOST}:${process.env.API_PORT}${endpoint}`;
+  return new URL(
+    `${process.env.API_PROTOCOL}://${process.env.API_HOST}:${process.env.API_PORT}${endpoint}`
+  );
+}
+
+function withToken(token: string, init?: Partial<RequestInit>) {
+  return merge(
+    defaultRequestInit,
+    {
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    },
+    init
+  );
 }
 
 export async function signIn({
   login,
   password,
 }: z.infer<typeof signInSchema>): Promise<AuthorizedUser | null> {
-  const response = await fetch(getEnpointUrl("/auth/signin"), {
-    body: JSON.stringify({ login, password }),
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-    },
-    method: "POST",
-  });
+  const response = await fetch(
+    getEnpointUrl("/auth/signin"),
+    merge(defaultRequestInit, {
+      body: JSON.stringify({ login, password }),
+      method: "POST",
+    })
+  );
 
   if (response.status !== 200) {
     return null;
@@ -51,14 +74,13 @@ export async function signUp({
   nickname,
   role,
 }: z.infer<typeof signUpSchema>) {
-  const response = await fetch(getEnpointUrl("/auth/signup"), {
-    body: JSON.stringify({ login, password, nickname, role }),
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-    },
-    method: "POST",
-  });
+  const response = await fetch(
+    getEnpointUrl("/auth/signup"),
+    merge(defaultRequestInit, {
+      body: JSON.stringify({ login, password, nickname, role }),
+      method: "POST",
+    })
+  );
 
   if (response.status !== 200) {
     return null;
@@ -74,13 +96,7 @@ export async function signUp({
 }
 
 export async function fetchMe({ token }: z.infer<typeof fetchMeSchema>) {
-  const response = await fetch(getEnpointUrl("/users/me"), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(getEnpointUrl("/users/me"), withToken(token));
 
   if (response.status !== 200) {
     return null;
@@ -99,15 +115,13 @@ export async function updateMe({
   token,
   ...data
 }: z.infer<typeof updateMeSchema>) {
-  const response = await fetch(getEnpointUrl("/users/me"), {
-    cache: "no-store",
-    method: "PUT",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
+  const response = await fetch(
+    getEnpointUrl("/users/me"),
+    withToken(token, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  );
 
   if (response.status !== 200) {
     return null;
@@ -125,13 +139,7 @@ export async function updateMe({
 export async function fetchMyPosts({
   token,
 }: z.infer<typeof authorizedSchema>) {
-  const response = await fetch(getEnpointUrl("/posts/my"), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(getEnpointUrl("/posts/my"), withToken(token));
 
   if (response.status !== 200) {
     return null;
@@ -141,15 +149,13 @@ export async function fetchMyPosts({
 }
 
 export async function createPost({ token, ...data }: CreatePost) {
-  const response = await fetch(getEnpointUrl("/posts"), {
-    cache: "no-store",
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
+  const response = await fetch(
+    getEnpointUrl("/posts"),
+    withToken(token, {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  );
 
   if (response.status !== 200) {
     return null;
@@ -165,12 +171,10 @@ export async function createPost({ token, ...data }: CreatePost) {
 }
 
 export async function getUser(id: number) {
-  const response = await fetch(getEnpointUrl(`/users/${id}`), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-    },
-  });
+  const response = await fetch(
+    getEnpointUrl(`/users/${id}`),
+    defaultRequestInit
+  );
 
   if (response.status !== 200) {
     return null;
@@ -186,12 +190,10 @@ export async function getUser(id: number) {
 }
 
 export async function getPostsByUser(id: number) {
-  const response = await fetch(getEnpointUrl(`/posts/by-user/${id}`), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-    },
-  });
+  const response = await fetch(
+    getEnpointUrl(`/posts/by-user/${id}`),
+    defaultRequestInit
+  );
 
   if (response.status !== 200) {
     return [];
@@ -207,13 +209,10 @@ export async function getPostsByUser(id: number) {
 }
 
 export async function isSubscribed(id: number, token: string) {
-  const response = await fetch(getEnpointUrl(`/users/is-subscribed/${id}`), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    getEnpointUrl(`/users/is-subscribed/${id}`),
+    withToken(token)
+  );
 
   if (response.status !== 200) {
     return false;
@@ -231,14 +230,10 @@ export async function isSubscribed(id: number, token: string) {
 }
 
 export async function subscribe(id: number, token: string) {
-  const response = await fetch(getEnpointUrl(`/users/subscribe/${id}`), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-    method: "POST",
-  });
+  const response = await fetch(
+    getEnpointUrl(`/users/subscribe/${id}`),
+    withToken(token, { method: "POST" })
+  );
 
   if (response.status !== 200) {
     return false;
@@ -256,14 +251,10 @@ export async function subscribe(id: number, token: string) {
 }
 
 export async function unsubscribe(id: number, token: string) {
-  const response = await fetch(getEnpointUrl(`/users/subscribe/${id}`), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-    method: "DELETE",
-  });
+  const response = await fetch(
+    getEnpointUrl(`/users/subscribe/${id}`),
+    withToken(token, { method: "DELETE" })
+  );
 
   if (response.status !== 200) {
     return false;
@@ -281,13 +272,36 @@ export async function unsubscribe(id: number, token: string) {
 }
 
 export async function fetchSubscriptions(token: string) {
-  const response = await fetch(getEnpointUrl("/users/subscriptions"), {
-    cache: "no-store",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    getEnpointUrl("/users/subscriptions"),
+    withToken(token)
+  );
+
+  if (response.status !== 200) {
+    return [];
+  }
+
+  const parsedSubscriptions = userSchema
+    .array()
+    .safeParse(await response.json());
+
+  if (!parsedSubscriptions.success) {
+    return [];
+  }
+
+  return parsedSubscriptions.data;
+}
+
+export async function checkEntity(
+  entity: Entity,
+  relation: EntityRelation,
+  token: string
+) {
+  const url = getEnpointUrl("/acl/check-entity");
+  url.searchParams.set("entity", entity);
+  url.searchParams.set("relation", relation);
+
+  const response = await fetch(url, withToken(token));
 
   if (response.status !== 200) {
     return [];
