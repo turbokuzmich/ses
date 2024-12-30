@@ -2,8 +2,6 @@ import { auth } from "@/lib/auth";
 import { fetchMe, updateMe } from "@/lib/api";
 import { updateMeSchema } from "@/lib/schemas";
 
-export const dynamic = "force-dynamic";
-
 export async function GET() {
   const session = await auth();
 

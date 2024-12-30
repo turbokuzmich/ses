@@ -1,5 +1,10 @@
 import { object, boolean, enum as enumSchema, infer as inferType } from "zod";
 
+export const roleSchema = enumSchema(["user", "artist", "promo"], {
+  message: "Пожалуйста, укажите роль",
+});
+export type Role = inferType<typeof roleSchema>;
+
 export const entitySchema = enumSchema(["music", "announcements"]);
 export type Entity = inferType<typeof entitySchema>;
 

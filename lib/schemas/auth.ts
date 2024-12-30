@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { roleSchema } from "./acl";
 
 export const apiUserSchema = z.object({
   id: z.coerce.string(),
@@ -18,9 +19,7 @@ export const signInSchema = z.object({
 
 export const signUpSchema = signInSchema.and(
   z.object({
-    role: z.enum(["user", "artist", "promo"], {
-      message: "Пожалуйста, выберите роль",
-    }),
+    role: roleSchema,
     nickname: z
       .string({
         required_error: "Пожалуйста, укажите ник",

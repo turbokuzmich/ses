@@ -11,6 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         login: {},
         nickname: {},
         password: {},
+        role: {},
       },
       authorize(credentials) {
         if (credentials.type === "signin") {
