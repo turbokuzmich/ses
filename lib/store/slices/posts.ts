@@ -16,13 +16,10 @@ export const postsApi = createApi({
       },
       providesTags(posts) {
         return (posts ?? [])
-          .map(
-            (post) =>
-              ({
-                type: "Post",
-                id: String(post.id),
-              } as const)
-          )
+          .map((post) => ({
+            type: "Post" as const,
+            id: String(post.id),
+          }))
           .concat([
             { type: "Post", id: "LIST" },
             { type: "Post", id: "MY" },

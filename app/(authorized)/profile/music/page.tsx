@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type UploadMusicForm, updloadMusicFormSchema } from "@/lib/schemas";
 import { styled } from "@mui/material/styles";
+import { musicApi } from "@/lib/store/slices/music";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -32,7 +33,9 @@ const defaultFormValues: Partial<UploadMusicForm> = {
 export default function Music() {
   const { currentData: me, isFetching } = meApi.endpoints.fetchMe.useQuery();
 
-  const { formState, register, setValue, handleSubmit, watch } =
+  const [uploadMusic] = musicApi.endpoints.upload.useMutation();
+
+  const { formState, register, setValue, handleSubmit, watch, reset } =
     useForm<UploadMusicForm>({
       defaultValues: defaultFormValues,
       resolver: zodResolver(updloadMusicFormSchema),
@@ -53,20 +56,9 @@ export default function Music() {
   const selectedFile: File | undefined = watch("file");
 
   const onSubmit = useCallback(async (data: UploadMusicForm) => {
-    const formData = new FormData();
+    await uploadMusic(data);
 
-    formData.set("title", data.title);
-    formData.set("description", data.description);
-    formData.set("file", data.file);
-
-    const response = await fetch("http://localhost:3002/api/music", {
-      body: formData,
-      method: "PUT",
-      headers: {
-        accept: "application/json",
-      },
-    });
-    console.log(await response.json());
+    reset();
   }, []);
 
   if (!isFetching && (!me || me.role !== "artist")) {
@@ -99,20 +91,27 @@ export default function Music() {
             {...register("description")}
           />
           <Button
-            color={selectedFile ? "success" : "secondary"}
+            color={
+              formState.errors.file || !selectedFile ? "secondary" : "success"
+            }
             component="label"
             variant="contained"
             tabIndex={-1}
             fullWidth
           >
-            {selectedFile ? selectedFile.name : "Выбрать wav"}
+            {selectedFile ? selectedFile.name : "wav или mp3 не более 250 Мб"}
             <VisuallyHiddenInput
-              accept=".wav"
+              accept=".wav,.mp3"
               name="file"
               type="file"
               onChange={onFileChange}
             />
           </Button>
+          {formState.errors.file ? (
+            <Typography color="error" variant="body2">
+              {formState.errors.file.message}
+            </Typography>
+          ) : null}
           <Button
             size="large"
             type="submit"

@@ -18,6 +18,8 @@ import {
   userSchema,
   isSubscribedSchema,
   checkEntitySchema,
+  CreateUploadMusic,
+  musicUploadSchema,
 } from "../schemas";
 
 const defaultRequestInit: Partial<RequestInit> = {
@@ -316,4 +318,22 @@ export async function checkEntity(
   }
 
   return parsedCheck.data;
+}
+
+export async function createUpload({ token, ...payload }: CreateUploadMusic) {
+  const response = await fetch(
+    getEnpointUrl("/music/my/upload"),
+    withToken(token, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+  );
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  const parsedMusicUpload = musicUploadSchema.safeParse(await response.json());
+
+  return parsedMusicUpload.success ? parsedMusicUpload.data : null;
 }
