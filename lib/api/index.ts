@@ -337,3 +337,14 @@ export async function createUpload({ token, ...payload }: CreateUploadMusic) {
 
   return parsedMusicUpload.success ? parsedMusicUpload.data : null;
 }
+
+export async function processUpload(id: number, token: string) {
+  const response = await fetch(
+    getEnpointUrl(`/music/my/process/${id}`),
+    withToken(token, {
+      method: "POST",
+    })
+  );
+
+  return response.status === 200;
+}

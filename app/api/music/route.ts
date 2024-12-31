@@ -5,7 +5,7 @@ import { Readable } from "stream";
 import { ReadableStream } from "stream/web";
 import { updloadMusicFormSchema } from "@/lib/schemas";
 import { auth } from "@/lib/auth";
-import { createUpload } from "@/lib/api";
+import { createUpload, processUpload } from "@/lib/api";
 
 const schema = zfd
   .formData({
@@ -45,7 +45,11 @@ export async function PUT(request: Request) {
       { encoding: "binary" }
     );
 
-    return Response.json(upload);
+    const isEnqueued = await processUpload(upload.id, session.user.token);
+
+    return isEnqueued
+      ? Response.json(upload)
+      : Response.json({ error: "Failed to process" }, { status: 500 });
   } else {
     return Response.json({ error: result.error.errors }, { status: 400 });
   }
