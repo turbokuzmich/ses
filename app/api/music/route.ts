@@ -5,7 +5,7 @@ import { Readable } from "stream";
 import { ReadableStream } from "stream/web";
 import { updloadMusicFormSchema } from "@/lib/schemas";
 import { auth } from "@/lib/auth";
-import { createUpload, processUpload } from "@/lib/api";
+import { createUpload, fetchMyMusic, processUpload } from "@/lib/api";
 
 const schema = zfd
   .formData({
@@ -49,8 +49,24 @@ export async function PUT(request: Request) {
 
     return isEnqueued
       ? Response.json(upload)
-      : Response.json({ error: "Failed to process" }, { status: 500 });
+      : Response.json({ error: "failed to process" }, { status: 500 });
   } else {
     return Response.json({ error: result.error.errors }, { status: 400 });
   }
+}
+
+export async function GET() {
+  const session = await auth();
+
+  if (!session?.user?.token) {
+    return Response.json({ error: "not authorized" }, { status: 401 });
+  }
+
+  const music = await fetchMyMusic(session.user.token);
+
+  if (music === null) {
+    return Response.json({ error: "failed to fetch music" }, { status: 500 });
+  }
+
+  return Response.json(music);
 }

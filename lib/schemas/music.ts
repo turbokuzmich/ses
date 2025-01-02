@@ -50,7 +50,7 @@ export const musicUploadSchema = z.object({
   title: z.string(),
   description: z.string(),
   status: musicStatusSchema,
-  error: z.string().optional().nullable(),
+  error: z.string().optional().nullable(), // Maybe redundant
   path: z.string(),
   createdAt: z.string().datetime(),
 });

@@ -8,6 +8,19 @@ export const musicApi = createApi({
   tagTypes: ["Music"],
   reducerPath: "music",
   endpoints: (build) => ({
+    my: build.query<MusicUpload[], void>({
+      query() {
+        return { url: "/" };
+      },
+      providesTags(music?: MusicUpload[]) {
+        return (music ?? [])
+          .map(({ id }) => ({
+            type: "Music" as const,
+            id: String(id),
+          }))
+          .concat([{ type: "Music", id: "MY" }]);
+      },
+    }),
     upload: build.mutation<MusicUpload, UploadMusicForm>({
       query(form) {
         const formData = new FormData();

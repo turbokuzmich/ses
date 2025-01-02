@@ -7,11 +7,32 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import Divider from "@mui/material/Divider";
+import Card from "@mui/material/Card";
+import CardHeader from "@mui/material/CardHeader";
+import IconButton from "@mui/material/IconButton";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import ErrorIcon from "@mui/icons-material/Error";
+import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type UploadMusicForm, updloadMusicFormSchema } from "@/lib/schemas";
+import {
+  type MusicUpload,
+  type UploadMusicForm,
+  updloadMusicFormSchema,
+} from "@/lib/schemas";
 import { styled } from "@mui/material/styles";
 import { musicApi } from "@/lib/store/slices/music";
+import { DateTime } from "luxon";
+import { useSelector } from "react-redux";
+import {
+  selectIsPlaying,
+  selectIsReady,
+  selectTrack,
+} from "@/lib/store/selectors/player";
+import { useAppDispatch } from "@/lib/store";
+import { playerSlice } from "@/lib/store/slices/player";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -31,7 +52,21 @@ const defaultFormValues: Partial<UploadMusicForm> = {
 };
 
 export default function Music() {
+  const dispatch = useAppDispatch();
+
   const { currentData: me, isFetching } = meApi.endpoints.fetchMe.useQuery();
+
+  const { currentData: music } = musicApi.endpoints.my.useQuery(undefined, {
+    pollingInterval: 30000,
+    refetchOnFocus: true,
+    skipPollingIfUnfocused: true,
+    refetchOnReconnect: true,
+    refetchOnMountOrArgChange: true,
+  });
+
+  const currentTrack = useSelector(selectTrack);
+  const isPlayerPlaying = useSelector(selectIsPlaying);
+  const isPlayerReady = useSelector(selectIsReady);
 
   const [uploadMusic] = musicApi.endpoints.upload.useMutation();
 
@@ -53,6 +88,19 @@ export default function Music() {
     [setValue]
   );
 
+  const onPlay = useCallback(
+    (track: MusicUpload) => {
+      if (track.id !== currentTrack?.id) {
+        dispatch(playerSlice.actions.play(track));
+      } else if (isPlayerPlaying) {
+        dispatch(playerSlice.actions.pause());
+      } else {
+        dispatch(playerSlice.actions.resume());
+      }
+    },
+    [currentTrack, isPlayerPlaying]
+  );
+
   const selectedFile: File | undefined = watch("file");
 
   const onSubmit = useCallback(async (data: UploadMusicForm) => {
@@ -68,6 +116,7 @@ export default function Music() {
   return (
     <>
       <Typography variant="h5">Загрузить</Typography>
+      {/** extract to separate component */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap={2} alignItems="flex-start" useFlexGap>
           <TextField
@@ -123,6 +172,66 @@ export default function Music() {
           </Button>
         </Stack>
       </form>
+      <Divider />
+      {/** extract to separate component */}
+      <Stack gap={2} useFlexGap>
+        {(music ?? []).map((music) => {
+          const createdAt = DateTime.fromISO(music.createdAt).setLocale("ru");
+
+          const isFailed = music.status === "ERROR";
+
+          const isProcessing =
+            music.status !== "ERROR" && music.status !== "PROCESSED";
+
+          const isProcessed = music.status === "PROCESSED";
+
+          const isDisabled = music.status !== "PROCESSED" || !isPlayerReady;
+
+          const isTrackPlaying =
+            isPlayerPlaying && music.id === currentTrack?.id;
+
+          const playButton = (
+            <IconButton
+              size="medium"
+              disabled={isDisabled}
+              onClick={() => onPlay(music)}
+            >
+              {isFailed ? <ErrorIcon fontSize="medium" /> : null}
+              {isProcessing ? <HourglassBottomIcon fontSize="medium" /> : null}
+              {isTrackPlaying ? <PauseIcon fontSize="medium" /> : null}
+              {isProcessed && !isTrackPlaying ? (
+                <PlayArrowIcon fontSize="medium" />
+              ) : null}
+            </IconButton>
+          );
+          return (
+            <Card
+              key={music.id}
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <CardHeader
+                avatar={playButton}
+                title={music.title}
+                titleTypographyProps={{ variant: "h6" }}
+                sx={{ flexGrow: 1 }}
+              />
+              <Typography
+                component="div"
+                padding={2}
+                flexShrink={0}
+                color="textSecondary"
+              >
+                {createdAt.toLocaleString(DateTime.DATE_MED)}{" "}
+                {createdAt.toLocaleString(DateTime.TIME_24_SIMPLE)}
+              </Typography>
+            </Card>
+          );
+        })}
+      </Stack>
     </>
   );
 }

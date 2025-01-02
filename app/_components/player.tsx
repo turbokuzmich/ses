@@ -1,164 +1,84 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
-// import Typography from "@mui/material/Typography";
+import Logo from "@/lib/components/logo-cut";
+import A from "@mui/material/Link";
+import Link from "next/link";
+import Slider from "@mui/material/Slider";
+import UserAvatar from "./avatar";
+import ReactPlayer from "react-player";
+import IconButton from "@mui/material/IconButton";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import PauseIcon from "@mui/icons-material/Pause";
-// import FavoriteIcon from "@mui/icons-material/Favorite";
-// import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
-import Slider from "@mui/material/Slider";
-// import Image from "next/image";
-import Logo from "@/lib/components/logo-cut";
-import A from "@mui/material/Link";
-import Link from "next/link";
-import UserAvatar from "./avatar";
-import AudioMotionAnalyzer from "audiomotion-analyzer";
-
-// import tempCover from "@/images/tmp-cover.jpg";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import {
+  selectGain,
+  selectIsPlaying,
+  selectIsReady,
+  selectTrack,
+} from "@/lib/store/selectors/player";
+import { useAppDispatch } from "@/lib/store";
+import { playerSlice } from "@/lib/store/slices/player";
 
 export default function HeaderPlayer() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [gain, setGain] = useState(100.0);
+  const dispatch = useAppDispatch();
 
-  const isInitialized = useRef(false);
-  const visializerContainerRef = useRef<HTMLDivElement>();
-  const audioElementRef = useRef<HTMLAudioElement>(null);
-  const audioContext = useRef<AudioContext>();
-  const sourceNode = useRef<MediaElementAudioSourceNode>();
-  const gainNode = useRef<GainNode>();
+  const isReady = useSelector(selectIsReady);
+  const isPlaying = useSelector(selectIsPlaying);
+  const gain = useSelector(selectGain);
+  const track = useSelector(selectTrack);
 
-  useEffect(() => {
-    if (!isInitialized.current && audioElementRef.current) {
-      audioContext.current = new AudioContext();
+  const url = useMemo(
+    () =>
+      track
+        ? [{ src: `/api/music/${track.id}`, type: "audio/mpeg" }]
+        : undefined,
+    [track]
+  );
 
-      sourceNode.current = new MediaElementAudioSourceNode(
-        audioContext.current,
-        {
-          mediaElement: audioElementRef.current,
-        }
-      );
-
-      gainNode.current = new GainNode(audioContext.current);
-
-      const analyzer = new AudioMotionAnalyzer(visializerContainerRef.current, {
-        connectSpeakers: false,
-        source: sourceNode.current,
-        alphaBars: false,
-        ansiBands: false,
-        barSpace: 0.25,
-        bgAlpha: 0,
-        channelLayout: "single",
-        colorMode: "gradient",
-        fftSize: 16384,
-        fillAlpha: 1,
-        frequencyScale: "log",
-        gradient: "prism",
-        ledBars: false,
-        linearAmplitude: false,
-        linearBoost: 1,
-        lineWidth: 0,
-        loRes: false,
-        lumiBars: false,
-        maxDecibels: -25,
-        maxFPS: 0,
-        maxFreq: 22000,
-        minDecibels: -85,
-        minFreq: 20,
-        mirror: 0,
-        mode: 8,
-        noteLabels: false,
-        outlineBars: false,
-        overlay: true,
-        peakLine: false,
-        radial: false,
-        radialInvert: false,
-        radius: 0.3,
-        reflexAlpha: 0.15,
-        reflexBright: 1,
-        reflexFit: true,
-        reflexRatio: 0,
-        roundBars: false,
-        showBgColor: true,
-        showFPS: false,
-        showPeaks: true,
-        showScaleX: false,
-        showScaleY: false,
-        smoothing: 0.5,
-        spinSpeed: 0,
-        splitGradient: false,
-        trueLeds: false,
-        useCanvas: true,
-        volume: 1,
-        weightingFilter: "D",
-      });
-
-      analyzer.connectOutput(gainNode.current);
-      gainNode.current.connect(audioContext.current.destination);
-
-      isInitialized.current = true;
-    }
-  }, [
-    isInitialized,
-    audioElementRef,
-    visializerContainerRef,
-    audioContext,
-    sourceNode,
-    gainNode,
-  ]);
+  const areControlsDisabled = !isReady || !track;
 
   const onPlayClick = useCallback(() => {
     if (isPlaying) {
-      setIsPlaying(false);
-      audioElementRef.current?.pause();
+      dispatch(playerSlice.actions.pause());
     } else {
-      if (audioContext.current?.state === "suspended") {
-        audioContext.current.resume();
-      }
-
-      setIsPlaying(true);
-      audioElementRef.current?.play();
+      dispatch(playerSlice.actions.resume());
     }
-  }, [isPlaying, setIsPlaying]);
-
-  const onGainChange = useCallback(
-    (_: Event, value: number | number[]) => {
-      const gain = Array.isArray(value) ? value[0] : value;
-
-      if (gainNode.current) {
-        gainNode.current.gain.value = gain / 100;
-      }
-
-      setGain(gain);
-    },
-    [setGain]
-  );
+  }, [isPlaying]);
 
   const onMuteClick = useCallback(() => {
-    if (gainNode.current) {
-      if (gain > 0) {
-        gainNode.current.gain.value = 0;
-        setGain(0);
-      } else {
-        gainNode.current.gain.value = 1.0;
-        setGain(100);
-      }
+    if (gain > 0) {
+      dispatch(playerSlice.actions.setGain(0));
+    } else {
+      dispatch(playerSlice.actions.setGain(100));
     }
-  }, [gain, setGain]);
+  }, [gain]);
+
+  const onGainChange = useCallback((_: Event, value: number | number[]) => {
+    const gain = Array.isArray(value) ? value[0] : value;
+
+    dispatch(playerSlice.actions.setGain(gain));
+  }, []);
+
+  useEffect(() => {
+    if (!isReady) {
+      dispatch(playerSlice.actions.setIsReady());
+    }
+  }, [isReady]);
 
   return (
     <Box bgcolor="background.paper">
+      <Box sx={{ display: "none" }}>
+        {isReady ? (
+          <ReactPlayer url={url} playing={isPlaying} volume={gain / 100} />
+        ) : null}
+      </Box>
       <Container>
-        <audio
-          crossOrigin="anonymous"
-          src="https://radio.skyses.space:8443/live"
-          ref={audioElementRef}
-        />
         <Stack
           direction="row"
           spacing={6}
@@ -181,8 +101,18 @@ export default function HeaderPlayer() {
             </Stack>
           </Box> */}
 
-          <Stack direction="row" flexShrink={0} spacing={1} useFlexGap>
-            <IconButton size="large" onClick={onPlayClick}>
+          <Stack
+            direction="row"
+            flexShrink={0}
+            flexGrow={1}
+            spacing={1}
+            useFlexGap
+          >
+            <IconButton
+              size="large"
+              onClick={onPlayClick}
+              disabled={areControlsDisabled}
+            >
               {isPlaying ? (
                 <PauseIcon fontSize="large" />
               ) : (
@@ -190,7 +120,11 @@ export default function HeaderPlayer() {
               )}
             </IconButton>
             <Stack direction="row" spacing={2} width={150} alignItems="center">
-              <IconButton size="large" onClick={onMuteClick}>
+              <IconButton
+                size="large"
+                onClick={onMuteClick}
+                disabled={areControlsDisabled}
+              >
                 {gain === 0 ? (
                   <VolumeOffIcon fontSize="small" />
                 ) : (
@@ -201,16 +135,11 @@ export default function HeaderPlayer() {
                 onChange={onGainChange}
                 value={gain}
                 size="small"
-                sx={{
-                  color: "common.white",
-                }}
+                disabled={areControlsDisabled}
+                sx={{ color: "common.white" }}
               />
             </Stack>
           </Stack>
-
-          <Box flexGrow={1}>
-            <Box ref={visializerContainerRef} width={200} height={20}></Box>
-          </Box>
 
           {/* <Box flexShrink={0}>
             <Stack direction="row" alignItems="center">

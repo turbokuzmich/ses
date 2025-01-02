@@ -4,6 +4,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { meApi } from "./slices/me";
 import { postsApi } from "./slices/posts";
 import { musicApi } from "./slices/music";
+import { playerSlice } from "./slices/player";
 
 export const makeStore = () => {
   const store = configureStore({
@@ -11,6 +12,7 @@ export const makeStore = () => {
       [meApi.reducerPath]: meApi.reducer,
       [postsApi.reducerPath]: postsApi.reducer,
       [musicApi.reducerPath]: musicApi.reducer,
+      [playerSlice.name]: playerSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(

@@ -37,6 +37,7 @@ function getEnpointUrl(endpoint: string) {
 
 function withToken(token: string, init?: Partial<RequestInit>) {
   return merge(
+    {},
     defaultRequestInit,
     {
       headers: {
@@ -53,7 +54,7 @@ export async function signIn({
 }: z.infer<typeof signInSchema>): Promise<AuthorizedUser | null> {
   const response = await fetch(
     getEnpointUrl("/auth/signin"),
-    merge(defaultRequestInit, {
+    merge({}, defaultRequestInit, {
       body: JSON.stringify({ login, password }),
       method: "POST",
     })
@@ -80,7 +81,7 @@ export async function signUp({
 }: z.infer<typeof signUpSchema>) {
   const response = await fetch(
     getEnpointUrl("/auth/signup"),
-    merge(defaultRequestInit, {
+    merge({}, defaultRequestInit, {
       body: JSON.stringify({ login, password, nickname, role }),
       method: "POST",
     })
@@ -347,4 +348,36 @@ export async function processUpload(id: number, token: string) {
   );
 
   return response.status === 200;
+}
+
+export async function fetchMyMusic(token: string) {
+  const response = await fetch(
+    getEnpointUrl("/music/my/uploads"),
+    withToken(token)
+  );
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  const parsedMusic = musicUploadSchema
+    .array()
+    .safeParse(await response.json());
+
+  return parsedMusic.success ? parsedMusic.data : null;
+}
+
+export async function fetchMusicById(id: string | number, token: string) {
+  const response = await fetch(
+    getEnpointUrl(`/music/track/${id}`),
+    withToken(token)
+  );
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  const parsedMusic = musicUploadSchema.safeParse(await response.json());
+
+  return parsedMusic.success ? parsedMusic.data : null;
 }
